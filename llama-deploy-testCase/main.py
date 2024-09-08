@@ -17,48 +17,73 @@ def add(a: float, b: float) -> float:
 
 #creating the third tool
 def substraction(a:float, b: float) -> float:
-    """_summary_
-
-    Args:
-        a (float): _description_
-        b (float): _description_
-
-    Returns: the substraction of two number
-        float: _description_
+    """
+    Returns: the substraction of two number 
     """
     return a -b
 
-#creating the four tool
+#division tool
 def division(a: float, b: float) -> float:
-    """_summary_
-
-    Args:
-        a (float): _description_
-        b (float): _description_
-
-    Returns:
-        float: _description_
-    """
+    """divide two numbers and returns their result """
     if b == 0 :
         raise ValueError("Cannot divide by zero.")
     return a / b 
+
+#string manupulation tools
+#concatenation tool
+def concatenate(str1:str, str2:str) -> str:
+    """concatenate two strings"""
+    return str1 + str2
+
+#counting of vowels tool
+def count_vowels(s:str) -> int:
+    """return the number of vowels in a string"""
+    vowels = "aieou"
+    count = 0
+    for char in s.lower():
+        if char in vowels:
+            count +=1
+
+    return count
+
+# Function to reverse a string
+def reverse_string(s: str) -> str:
+    """Reverse the input string."""
+    return s[::-1]
+
 
 #create the tool class object
 multiply_tool = FunctionTool.from_defaults(fn=multiply)
 add_tool = FunctionTool.from_defaults(fn=add)
 division_tool = FunctionTool.from_defaults(fn=division)
 substraction_tool = FunctionTool.from_defaults(fn=substraction)
+concatenate_tool = FunctionTool.from_defaults(fn=concatenate)
+vowel_tool = FunctionTool.from_defaults(fn=count_vowels)
+reverse_tool = FunctionTool.from_defaults(fn=reverse_string)
+
 
 # Initializing the LLM
 llm = Groq(model="llama3-70b-8192")
 
 # Initialize the agent
 agent = ReActAgent.from_tools(
-    [multiply_tool, add_tool, division_tool, substraction_tool], 
+    [
+        multiply_tool,
+        add_tool,
+        division_tool,
+        substraction_tool,
+        concatenate_tool,
+        vowel_tool,
+        reverse_tool,
+    ], 
     llm=llm, 
     verbose=True
 )
 
 # Ask a question
-response = agent.chat("What (2/2) * 3456 + 2345 - (3456 / 123)? ")
+response = agent.chat("""
+     reverse the string hello world,
+     concatenate the string hello world
+     how many vowels are the strings hello world
+""")
 print(response)
