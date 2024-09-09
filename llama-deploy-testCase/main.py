@@ -82,8 +82,6 @@ agent = ReActAgent.from_tools(
 
 # Ask a question
 response = agent.chat("""
-     reverse the string hello world,
-     concatenate the string hello world
-     how many vowels are the strings hello world
+     what is 765 + 4 * 4444 / 45 -12345?
 """)
 print(response)
