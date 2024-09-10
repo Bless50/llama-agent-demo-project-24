@@ -4,6 +4,23 @@ load_dotenv()
 from llama_index.core.agent import ReActAgent
 from llama_index.llms.groq import Groq
 from llama_index.core.tools import FunctionTool
+from llama_index.core import SimpleDirectoryReader
+from llama_index.core import VectorStoreIndex
+
+# Load documents from the specified directory
+documents = SimpleDirectoryReader("2023_budget.pdf").load_data()
+
+# Create a Vector Store Index from the loaded documents
+index = VectorStoreIndex.from_documents(documents)
+
+# Create a query engine from the index
+query_engine = index.as_query_engine()
+
+# Test the query engine with a sample question
+response = query_engine.query(
+    "What was the total amount of the 2023 Canadian federal budget?"
+)
+print(response)
 
 # Creating the tools
 def multiply(a: float, b: float) -> float:
