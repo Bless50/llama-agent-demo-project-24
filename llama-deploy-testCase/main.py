@@ -1,26 +1,29 @@
 from dotenv import load_dotenv
-
-load_dotenv()
 from llama_index.core.agent import ReActAgent
 from llama_index.llms.groq import Groq
 from llama_index.core.tools import FunctionTool
 from llama_index.core import SimpleDirectoryReader
-from llama_index.core import VectorStoreIndex
+from llama_index.core import SimpleDirectoryReader, VectorStoreIndex, Settings
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.core.tools import QueryEngineTool
+from llama_parse import LlamaParse
 
-# Load documents from the specified directory
-documents = SimpleDirectoryReader("2023_budget.pdf").load_data()
+load_dotenv()
+# Set the Groq API key in the LLM settings
+Settings.llm = Groq(model="llama-3.1-70b-versatile")
 
-# Create a Vector Store Index from the loaded documents
+
+#setting the embeding model
+Settings.embed_model = HuggingFaceEmbedding(
+    model_name="BAAI/bge-small-en-v1.5"
+)
+
+
+# rag pipeline
+documents = LlamaParse(result_type="markdown").load_data("./data")
 index = VectorStoreIndex.from_documents(documents)
-
-# Create a query engine from the index
 query_engine = index.as_query_engine()
 
-# Test the query engine with a sample question
-response = query_engine.query(
-    "What was the total amount of the 2023 Canadian federal budget?"
-)
-print(response)
 
 # Creating the tools
 def multiply(a: float, b: float) -> float:
@@ -37,7 +40,7 @@ def substraction(a:float, b: float) -> float:
     """
     Returns: the substraction of two number 
     """
-    return a -b
+    return a - b
 
 #division tool
 def division(a: float, b: float) -> float:
@@ -69,7 +72,13 @@ def reverse_string(s: str) -> str:
     return s[::-1]
 
 
-#create the tool class object
+budget_tool = QueryEngineTool.from_defaults(
+    query_engine,
+    name="canadian_budget_2023",
+    description="A RAG engine with some basic facts about the 2023 Canadian federal budget.",
+)
+
+#turning the functions to tools to passed the agent
 multiply_tool = FunctionTool.from_defaults(fn=multiply)
 add_tool = FunctionTool.from_defaults(fn=add)
 division_tool = FunctionTool.from_defaults(fn=division)
@@ -78,9 +87,6 @@ concatenate_tool = FunctionTool.from_defaults(fn=concatenate)
 vowel_tool = FunctionTool.from_defaults(fn=count_vowels)
 reverse_tool = FunctionTool.from_defaults(fn=reverse_string)
 
-
-# Initializing the LLM
-llm = Groq(model="llama3-70b-8192")
 
 # Initialize the agent
 agent = ReActAgent.from_tools(
@@ -92,13 +98,12 @@ agent = ReActAgent.from_tools(
         concatenate_tool,
         vowel_tool,
         reverse_tool,
+        budget_tool
     ], 
-    llm=llm, 
+     llm=Settings.llm,
     verbose=True
 )
 
-# Ask a question
-response = agent.chat("""
-     what is 765 + 4 * 4444 / 45 -12345?
-""")
+#test the agents.
+response = query_engine.query("What is the allocation for green technologies?")
 print(response)
